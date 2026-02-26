@@ -79,24 +79,24 @@ namespace bazadedate
                     }
                     else
                     {
-                        LoadData(@"SELECT TOP 5 nume, prenume, media, datan, oras FROM Admitere WHERE rezultat = 'admis' ORDER BY media ASC");
+                        LoadData(@"SELECT TOP 5 nume, prenume, media, datan, oras FROM Admitere WHERE rezultat = 'admis' ORDER BY media");
                     }
                     break;
                 case 3:
-                    LoadData(@"SELECT nume, prenume, oras, datan, media FROM Admitere WHERE rezultat = 'admis' AND DATEADD(year, 18, datan) >= GETDATE() AND DATEADD(year, 20, datan) <= GETDATE() ORDER BY datan, nume ASC");
+                    LoadData(@"SELECT nume, prenume, oras, datan, media FROM Admitere WHERE rezultat = 'admis' AND DATEADD(year, 18, datan) >= GETDATE() AND DATEADD(year, 20, datan) <= GETDATE() ORDER BY datan, nume");
                     break;
                 case 4:
                     if (secondaryTask == 0)
                     {
-                        LoadData(@"SELECT nume, prenume, proba1, rezultat FROM Admitere ORDER BY proba1 ASC");
+                        LoadData(@"SELECT nume, prenume, proba1, rezultat FROM Admitere ORDER BY proba1");
                     }
                     else
                     {
-                        LoadData(@"SELECT nume, prenume, proba2, rezultat FROM Admitere ORDER BY proba2 ASC");
+                        LoadData(@"SELECT nume, prenume, proba2, rezultat FROM Admitere ORDER BY proba2");
                     }
                     break;
                 case 5:
-                    LoadData(@"SELECT nume, prenume, media, rezultat FROM Admitere ORDER BY nume, prenume ASC");
+                    LoadData(@"SELECT nume, prenume, media, rezultat FROM Admitere ORDER BY nume, prenume");
                     break;
                 case 6:
                     var num1 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 1 AND media <= 5.00");
@@ -122,6 +122,22 @@ namespace bazadedate
                 case 8:
                     var city = _secondaryTaskTextbox.Text;
                     LoadData($@"SELECT ROW_NUMBER() OVER (ORDER BY nume, prenume) AS NR, PRENUME, MEDIA, REZULTAT FROM Admitere WHERE oras = '{city}' ORDER BY nume, prenume");
+                    break;
+                case 9:
+                    LoadData(@"SELECT a.NUME, a.PRENUME, a.MEDIA, a.ORAS FROM Admitere a WHERE media = (SELECT MAX(b.media) FROM Admitere b WHERE b.oras = a.oras) ORDER BY oras");
+                    break;
+                case 10:
+                    if (_secondaryTaskCombobox.SelectedIndex == 0)
+                    {
+                        LoadData(@"SELECT ID, NUME, PRENUME, SEX, PROBA1, PROBA2, MEDIA, DATAN, REZULTAT FROM Admitere WHERE oras = 'Cluj' AND rezultat = 'admis' ORDER BY media, nume, prenume");
+                    }
+                    else
+                    {
+                        LoadData(@"SELECT ID, NUME, PRENUME, SEX, PROBA1, PROBA2, MEDIA, DATAN, REZULTAT FROM Admitere WHERE oras = 'Cluj' AND rezultat = 'respins' ORDER BY media, nume, prenume");
+                    }
+                    break;
+                case 11:
+                    LoadData(@"SELECT TOP 4 NUME, PRENUME, ORAS, MEDIA FROM Admitere WHERE oras <> 'Brasov' ORDER BY media DESC, proba1 DESC");
                     break;
                 default:
                     break;
@@ -152,6 +168,9 @@ namespace bazadedate
                     break;
                 case 8:
                     _secondaryTaskTextbox.Show();
+                    break;
+                case 10:
+                    ShowSecondaryCombobox(new object[] { "Admisi", "Respinsi" });
                     break;
                 default:
                     _secondaryTaskCombobox.Hide();
