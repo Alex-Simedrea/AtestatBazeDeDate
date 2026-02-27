@@ -15,7 +15,7 @@ namespace bazadedate
 {
     public partial class Form1 : Form
     {
-        private static readonly string ConnectionString = @"Data Source=192.168.5.10;Initial Catalog=Admitere;User ID=alex;Password=12345678;Encrypt=True;TrustServerCertificate=True;";
+        private static readonly string ConnectionString = @"Data Source=172.20.10.4;Initial Catalog=Admitere;User ID=alex;Password=12345678;Encrypt=True;TrustServerCertificate=True;";
 
         private ComboBox _taskCombobox;
         private ComboBox _secondaryTaskCombobox;
@@ -199,19 +199,19 @@ Media mediilor: {num3}");
                     break;
                 case 18:
                     {
-                        double num;
-                        if (_secondaryTaskCombobox.SelectedIndex == 0)
-                        {
-                            num = Math.Round(ExecuteScalar(@"SELECT AVG(media) FROM Admitere WHERE rezultat = 'admis'"), 2);
-                        }
-                        else
-                        {
-                            num = Math.Round(ExecuteScalar(@"SELECT AVG(media) FROM Admitere WHERE rezultat = 'respins'"), 2);
-                        }
+                        double num1 = Math.Round(ExecuteScalar(@"SELECT AVG(media) FROM Admitere WHERE rezultat = 'admis'"), 2);
+                        double num2 = Math.Round(ExecuteScalar(@"SELECT AVG(media) FROM Admitere WHERE rezultat = 'respins'"), 2);
 
-                        MessageBox.Show($@"Media: {num}");
+                        MessageBox.Show($@"Medie admisi: {num1}
+Medie respinsi: {num2}");
                         break;
                     }
+                case 19:
+                    LoadData(@"SELECT TOP 1 NUME, PRENUME, ORAS FROM Admitere ORDER BY media DESC");
+                    break;
+                case 20:
+                    LoadData(@"SELECT ORAS, COUNT(*) AS NRCAND, MAX(media) AS MAX_MEDIA, MIN(media) AS MIN_MEDIA FROM Admitere GROUP BY oras ORDER BY oras");
+                    break;
                 default:
                     break;
             }
@@ -256,9 +256,6 @@ Media mediilor: {num3}");
                     break;
                 case 15:
                     _secondaryTaskTextbox.Show();
-                    break;
-                case 18:
-                    ShowSecondaryCombobox(new object[] { "Admisi", "Respinsi" });
                     break;
                 default:
                     _secondaryTaskCombobox.Hide();
