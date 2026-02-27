@@ -9,12 +9,13 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Data.SqlClient;
 using System.Runtime.CompilerServices;
+using System.Net.Configuration;
 
 namespace bazadedate
 {
     public partial class Form1 : Form
     {
-        private static readonly string ConnectionString = @"Data Source=172.20.10.4;Initial Catalog=Admitere;User ID=alex;Password=12345678;Encrypt=True;TrustServerCertificate=True;";
+        private static readonly string ConnectionString = @"Data Source=192.168.5.10;Initial Catalog=Admitere;User ID=alex;Password=12345678;Encrypt=True;TrustServerCertificate=True;";
 
         private ComboBox _taskCombobox;
         private ComboBox _secondaryTaskCombobox;
@@ -60,6 +61,8 @@ namespace bazadedate
         {
             var task = _taskCombobox.SelectedIndex + 1;
             var secondaryTask = _secondaryTaskCombobox.SelectedIndex;
+            var text = _secondaryTaskTextbox.Text;
+
             switch (task)
             {
                 case 1:
@@ -99,29 +102,30 @@ namespace bazadedate
                     LoadData(@"SELECT nume, prenume, media, rezultat FROM Admitere ORDER BY nume, prenume");
                     break;
                 case 6:
-                    var num1 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 1 AND media <= 5.00");
-                    var num2 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 5.01 AND media <= 7.00");
-                    var num3 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 7.01 AND media <= 9.00");
-                    var num4 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 9.01 AND media <= 10");
-                    var total = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere");
+                    {
+                        var num1 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 1 AND media <= 5.00");
+                        var num2 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 5.01 AND media <= 7.00");
+                        var num3 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 7.01 AND media <= 9.00");
+                        var num4 = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere WHERE media >= 9.01 AND media <= 10");
+                        var total = ExecuteScalar(@"SELECT COUNT(*) FROM Admitere");
 
-                    var percent1 = Math.Round(num1 / total * 100, 2);
-                    var percent2 = Math.Round(num2 / total * 100, 2);
-                    var percent3 = Math.Round(num3 / total * 100, 2);
-                    var percent4 = Math.Round(num4 / total * 100, 2);
+                        var percent1 = Math.Round(num1 / total * 100, 2);
+                        var percent2 = Math.Round(num2 / total * 100, 2);
+                        var percent3 = Math.Round(num3 / total * 100, 2);
+                        var percent4 = Math.Round(num4 / total * 100, 2);
 
-                    MessageBox.Show($@"1 - 5.00: {percent1}%
+                        MessageBox.Show($@"1 - 5.00: {percent1}%
 5.01 - 7.00: {percent2}%
 7.01 - 9.00: {percent3}%
 9.01 - 10.00: {percent4}%
 ");
-                    break;
+                        break;
+                    }
                 case 7:
                     LoadData(@"SELECT nume, prenume, media, rezultat, oras FROM Admitere ORDER BY oras, nume, prenume");
                     break;
                 case 8:
-                    var city = _secondaryTaskTextbox.Text;
-                    LoadData($@"SELECT ROW_NUMBER() OVER (ORDER BY nume, prenume) AS NR, PRENUME, MEDIA, REZULTAT FROM Admitere WHERE oras = '{city}' ORDER BY nume, prenume");
+                    LoadData($@"SELECT ROW_NUMBER() OVER (ORDER BY nume, prenume) AS NR, PRENUME, MEDIA, REZULTAT FROM Admitere WHERE oras = '{text}' ORDER BY nume, prenume");
                     break;
                 case 9:
                     LoadData(@"SELECT a.NUME, a.PRENUME, a.MEDIA, a.ORAS FROM Admitere a WHERE media = (SELECT MAX(b.media) FROM Admitere b WHERE b.oras = a.oras) ORDER BY oras");
@@ -137,8 +141,77 @@ namespace bazadedate
                     }
                     break;
                 case 11:
-                    LoadData(@"SELECT TOP 4 NUME, PRENUME, ORAS, MEDIA FROM Admitere WHERE oras <> 'Brasov' ORDER BY media DESC, proba1 DESC");
+                    LoadData(@"SELECT TOP 4 NUME, PRENUME, ORAS, MEDIA FROM Admitere WHERE oras <> 'Brasov' AND rezultat = 'admis' ORDER BY media DESC, proba1 DESC");
                     break;
+                case 12:
+                    if (_secondaryTaskCombobox.SelectedIndex == 0)
+                    {
+                        LoadData(@"SELECT TOP 2 NUME, PRENUME, ORAS, MEDIA FROM Admitere WHERE oras <> 'Brasov' AND rezultat = 'admis' AND sex = 'm' ORDER BY media DESC, proba1 DESC");
+                    }
+                    else
+                    {
+                        LoadData(@"SELECT TOP 3 NUME, PRENUME, ORAS, MEDIA FROM Admitere WHERE oras <> 'Brasov' AND rezultat = 'admis' AND sex = 'f' ORDER BY media DESC, proba1 DESC");
+                    }
+                    break;
+                case 13:
+                    if (_secondaryTaskCombobox.SelectedIndex == 0)
+                    {
+                        LoadData(@"SELECT NUME, PRENUME, MEDIA FROM Admitere WHERE media >= 9.75 AND media <= 10 ORDER BY nume, prenume");
+                    }
+                    else
+                    {
+                        LoadData(@"SELECT NUME, PRENUME, MEDIA FROM Admitere WHERE media >= 8.50 AND media <= 9.74 ORDER BY nume, prenume");
+                    }
+                    break;
+                case 14:
+                    if (_secondaryTaskCombobox.SelectedIndex == 0)
+                    {
+                        LoadData(@"SELECT NUME, PRENUME, DATAN, ORAS FROM Admitere WHERE rezultat = 'respins' AND DATEADD(year, 20, datan) <= GETDATE() AND sex = 'm'");
+                    }
+                    else
+                    {
+                        LoadData(@"SELECT NUME, PRENUME, DATAN, ORAS FROM Admitere WHERE rezultat = 'admis' OR DATEADD(year, 20, datan) > GETDATE() OR sex = 'f'");
+                    }
+                    break;
+                case 15:
+                    {
+                        var admisi = ExecuteScalar($@"SELECT COUNT(*) FROM Admitere WHERE rezultat = 'admis' AND oras = '{text}'");
+                        var total = ExecuteScalar($@"SELECT COUNT(*) FROM Admitere WHERE oras = '{text}'");
+
+                        var percentage = Math.Round(admisi / total * 100, 0);
+                        MessageBox.Show($@"Procent admisi: {percentage}%
+Total candidati: {total}");
+                        break;
+                    }
+                case 16:
+                    {
+                        var num1 = Math.Round(ExecuteScalar(@"SELECT AVG(proba1) FROM Admitere WHERE rezultat = 'admis'"), 2);
+                        var num2 = Math.Round(ExecuteScalar(@"SELECT AVG(proba2) FROM Admitere WHERE rezultat = 'admis'"), 2);
+                        var num3 = Math.Round(ExecuteScalar(@"SELECT AVG(media) FROM Admitere WHERE rezultat = 'admis'"), 2);
+
+                        MessageBox.Show($@"Medie proba 1: {num1}
+Medie proba 2: {num2}
+Media mediilor: {num3}");
+                        break;
+                    }
+                case 17:
+                    LoadData(@"SELECT NUME, PRENUME, MEDIA, ORAS from Admitere WHERE media >= 5 AND rezultat = 'respins'");
+                    break;
+                case 18:
+                    {
+                        double num;
+                        if (_secondaryTaskCombobox.SelectedIndex == 0)
+                        {
+                            num = Math.Round(ExecuteScalar(@"SELECT AVG(media) FROM Admitere WHERE rezultat = 'admis'"), 2);
+                        }
+                        else
+                        {
+                            num = Math.Round(ExecuteScalar(@"SELECT AVG(media) FROM Admitere WHERE rezultat = 'respins'"), 2);
+                        }
+
+                        MessageBox.Show($@"Media: {num}");
+                        break;
+                    }
                 default:
                     break;
             }
@@ -170,6 +243,21 @@ namespace bazadedate
                     _secondaryTaskTextbox.Show();
                     break;
                 case 10:
+                    ShowSecondaryCombobox(new object[] { "Admisi", "Respinsi" });
+                    break;
+                case 12:
+                    ShowSecondaryCombobox(new object[] { "Baieti", "Fete" });
+                    break;
+                case 13:
+                    ShowSecondaryCombobox(new object[] { "De merit", "De studii" });
+                    break;
+                case 14:
+                    ShowSecondaryCombobox(new object[] { "Incorporabili", "Neincorporabili" });
+                    break;
+                case 15:
+                    _secondaryTaskTextbox.Show();
+                    break;
+                case 18:
                     ShowSecondaryCombobox(new object[] { "Admisi", "Respinsi" });
                     break;
                 default:
